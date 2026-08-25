@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Visa Sponsorship Finder — .NET Jobs</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <div>
+      <h1>Sponsorship Finder</h1>
+      <p class="brand-sub" id="brand-sub">.NET roles worldwide</p>
+    </div>
+  </div>
+  <div class="tally" id="tally">
+    <span class="tally-item"><b id="tally-confirmed">0</b> confirmed</span>
+    <span class="tally-item"><b id="tally-jobs">0</b> jobs</span>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab is-active" data-tab="current" role="tab">This page</button>
+  <button class="tab" data-tab="jobs"      role="tab">Jobs</button>
+  <button class="tab" data-tab="companies" role="tab">Companies</button>
+  <button class="tab" data-tab="export"    role="tab">Export</button>
+  <button class="tab" data-tab="profile"   role="tab">Profile</button>
+</nav>
+
+<main>
+
+<!-- ══ THIS PAGE ══════════════════════════════════════════════════ -->
+<section class="panel is-active" id="panel-current">
+
+  <div id="current-empty" class="empty">
+    <p class="empty-title">Open a job posting to analyse it</p>
+    <p class="empty-body">Works on LinkedIn, Indeed, Glassdoor, The Hub, Arbetsförmedlingen and Jobbsafari. Open a single job page, then come back here.</p>
+  </div>
+
+  <div id="current-ready" class="hidden">
+    <div class="page-head">
+      <div class="page-source" id="current-source">—</div>
+      <h2 class="page-title" id="current-title">—</h2>
+      <div class="page-meta" id="current-company">—</div>
+    </div>
+    <button class="btn btn-primary btn-block" id="analyse-btn">Analyse this posting</button>
+    <p class="hint" id="analyse-hint">Reads the description already on your screen. No account or API key needed.</p>
+  </div>
+
+  <div id="current-result" class="hidden">
+    <!-- verdict -->
+    <div class="verdict" id="verdict">
+      <div class="verdict-top">
+        <span class="verdict-dot" id="verdict-dot">⚪</span>
+        <div>
+          <div class="verdict-label" id="verdict-label">—</div>
+          <div class="verdict-reason" id="verdict-reason">—</div>
+        </div>
+      </div>
+      <div class="confidence">
+        <div class="confidence-track"><div class="confidence-fill" id="confidence-fill"></div></div>
+        <span class="confidence-num" id="confidence-num">0%</span>
+      </div>
+      <div class="permit-hint hidden" id="permit-hint"></div>
+    </div>
+
+    <div class="warn hidden" id="historical-warn">
+      Historical evidence — verify this applies to the current role.
+    </div>
+
+    <!-- evidence: the core of the product -->
+    <div class="block">
+      <h3 class="block-title">Evidence from the posting</h3>
+      <div id="evidence-list" class="evidence-list"></div>
+      <p class="evidence-note" id="evidence-note"></p>
+    </div>
+
+    <!-- match -->
+    <div class="block">
+      <div class="block-head">
+        <h3 class="block-title">Match with your profile</h3>
+        <span class="match-pill" id="match-pill">—</span>
+      </div>
+      <div id="match-bars" class="match-bars"></div>
+    </div>
+
+    <!-- extracted -->
+    <div class="block">
+      <h3 class="block-title">Details found</h3>
+      <dl class="facts" id="facts"></dl>
+    </div>
+
+    <div class="row-actions">
+      <button class="btn btn-secondary" id="save-btn">Save job</button>
+      <button class="btn btn-ghost" id="reanalyse-btn">Re-analyse</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ JOBS ═══════════════════════════════════════════════════════ -->
+<section class="panel" id="panel-jobs">
+  <div class="filters">
+    <input type="search" id="job-search" class="input" placeholder="Filter by title, company, tech…">
+    <div class="chip-row" id="status-chips">
+      <button class="chip is-on" data-status="CONFIRMED">🟢 Confirmed</button>
+      <button class="chip is-on" data-status="POTENTIAL">🟡 Potential</button>
+      <button class="chip is-on" data-status="UNKNOWN">⚪ Unknown</button>
+      <button class="chip" data-status="NONE">🔴 None</button>
+    </div>
+    <div class="filter-row">
+      <select id="country-filter" class="select">
+        <option value="">All countries</option>
+      </select>
+    </div>
+    <div class="filter-row">
+      <select id="sort-by" class="select">
+        <option value="match">Best match</option>
+        <option value="status">Sponsorship first</option>
+        <option value="recent">Most recent</option>
+        <option value="company">Company A–Z</option>
+      </select>
+      <label class="check"><input type="checkbox" id="saved-only"> Saved only</label>
+    </div>
+  </div>
+  <div id="jobs-list" class="list"></div>
+</section>
+
+<!-- ══ COMPANIES ══════════════════════════════════════════════════ -->
+<section class="panel" id="panel-companies">
+  <div class="filters">
+    <input type="search" id="company-search" class="input" placeholder="Filter companies…">
+    <select id="company-country" class="select">
+      <option value="">All countries</option>
+    </select>
+    <select id="company-sort" class="select">
+      <option value="status">Sponsorship first</option>
+      <option value="jobs">Most open roles</option>
+      <option value="recent">Latest evidence</option>
+      <option value="name">Name A–Z</option>
+    </select>
+  </div>
+  <div id="companies-list" class="list"></div>
+</section>
+
+<!-- ══ EXPORT ═════════════════════════════════════════════════════ -->
+<section class="panel" id="panel-export">
+  <div class="block">
+    <h3 class="block-title">Include these statuses</h3>
+    <label class="check"><input type="checkbox" class="exp-status" value="CONFIRMED" checked> 🟢 Confirmed sponsorship</label>
+    <label class="check"><input type="checkbox" class="exp-status" value="POTENTIAL" checked> 🟡 Potential sponsorship</label>
+    <label class="check"><input type="checkbox" class="exp-status" value="UNKNOWN"   checked> ⚪ Unknown</label>
+    <label class="check"><input type="checkbox" class="exp-status" value="NONE"> 🔴 No sponsorship</label>
+  </div>
+
+  <div class="block">
+    <h3 class="block-title">Countries</h3>
+    <select id="export-country" class="select">
+      <option value="">All countries</option>
+    </select>
+  </div>
+
+  <div class="block">
+    <h3 class="block-title">Scope</h3>
+    <label class="check"><input type="radio" name="scope" value="all" checked> All discovered jobs</label>
+    <label class="check"><input type="radio" name="scope" value="saved"> Saved jobs only</label>
+  </div>
+
+  <div class="preview" id="export-preview">
+    <div class="preview-head">Export preview</div>
+    <div class="preview-grid" id="preview-grid"></div>
+    <div class="preview-sheets">6 sheets: Jobs · Sponsoring companies · Potential sponsors · Saved · Tracker · Read me</div>
+  </div>
+
+  <button class="btn btn-primary btn-block" id="export-btn">Download Excel workbook</button>
+  <p class="hint" id="export-hint">Built on your device. Nothing is uploaded.</p>
+
+  <div class="block danger-block">
+    <h3 class="block-title">Data</h3>
+    <button class="btn btn-ghost" id="clear-btn">Clear all collected jobs</button>
+  </div>
+</section>
+
+<!-- ══ PROFILE ════════════════════════════════════════════════════ -->
+<section class="panel" id="panel-profile">
+  <div class="block">
+    <h3 class="block-title">Your profile</h3>
+    <p class="block-sub">Used to score how well each role fits you.</p>
+
+    <label class="field">
+      <span>Years of experience</span>
+      <input type="number" id="p-years" class="input" min="0" max="40" step="0.5">
+    </label>
+
+    <label class="field">
+      <span>Target job title</span>
+      <input type="text" id="p-title" class="input" placeholder="Senior .NET Developer">
+    </label>
+
+    <label class="field">
+      <span>Primary technologies</span>
+      <input type="text" id="p-primary" class="input" placeholder="C#, .NET, ASP.NET Core">
+      <small>Comma separated. These carry the most weight.</small>
+    </label>
+
+    <label class="field">
+      <span>Secondary technologies</span>
+      <input type="text" id="p-secondary" class="input" placeholder="Azure, SQL Server, React">
+    </label>
+
+    <div class="field">
+      <span>Countries you'd move to</span>
+      <div class="country-grid" id="country-grid"></div>
+      <small>Sponsorship wording is country-specific, so this also tunes the analysis.</small>
+    </div>
+
+    <label class="field">
+      <span>Preferred cities <span class="opt">optional</span></span>
+      <input type="text" id="p-cities" class="input" placeholder="Stockholm, Amsterdam">
+      <small>Leave empty to accept any city in the countries above.</small>
+    </label>
+
+    <label class="field">
+      <span>Work mode</span>
+      <select id="p-mode" class="select">
+        <option>Any</option><option>Remote</option><option>Hybrid</option><option>On-site</option>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Desired monthly salary (SEK)</span>
+      <input type="text" id="p-salary" class="input" placeholder="55000">
+    </label>
+
+    <label class="check"><input type="checkbox" id="p-sponsor"> I need work-permit sponsorship</label>
+    <label class="check"><input type="checkbox" id="p-relocate"> I need relocation support</label>
+
+    <button class="btn btn-primary btn-block" id="save-profile-btn">Save profile</button>
+  </div>
+
+  <div class="block">
+    <h3 class="block-title">Optional AI second opinion</h3>
+    <p class="block-sub">Analysis works fully offline without this. An AI pass can catch unusual wording the patterns miss — it can never upgrade a status without quoting the posting.</p>
+    <label class="field">
+      <span>Provider</span>
+      <select id="ai-provider" class="select">
+        <option value="none">Off — rules only</option>
+        <option value="anthropic">Anthropic Claude</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="openai">OpenAI</option>
+      </select>
+    </label>
+    <label class="field" id="ai-key-field">
+      <span>API key</span>
+      <input type="password" id="ai-key" class="input" placeholder="Stored on this device only">
+    </label>
+    <button class="btn btn-secondary btn-block" id="save-ai-btn">Save AI settings</button>
+  </div>
+
+  <p class="legal">Status is read from the posting's own words. It is not legal or immigration advice — always confirm with the employer.</p>
+</section>
+
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="lib/xlsx.full.min.js"></script>
+<script src="js/countries.js"></script>
+<script src="js/lexicon.js"></script>
+<script src="js/sponsorship.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/matching.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/export.js"></script>
+<script src="js/popup.js"></script>
+</body>
+</html>
